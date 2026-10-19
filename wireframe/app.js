@@ -1,4 +1,4 @@
-const state = { screens: [], nav: [], panel: "CLIENT", screenId: "CLIENT-01", sidebarOpen: false, formMode: null, formAction: "", formStep: 1, formDirty: false, directory: false, flowView: null, permissionOpenModules: ["Administration"], panelNavGroup: { CLIENT:"Home", SUPPORT:"Operations", ADMIN:"Home" } };
+const state = { screens: [], nav: [], panel: "CLIENT", screenId: "CLIENT-01", sidebarOpen: false, formMode: null, formAction: "", formStep: 1, formDirty: false, directory: false, flowView: null, permissionOpenModules: ["Administration"], panelNavGroup: { CLIENT:"Home", SUPPORT:"Operations", ADMIN:"Home", SAAS:"Overview" } };
 
 const iconPaths = {
   dashboard: '<path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/>',
@@ -56,7 +56,7 @@ function parseCSV(text) {
 }
 const split = value => (value || "").split(/\s*;\s*/).filter(Boolean);
 const esc = value => String(value || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
-const mutationActionPattern = /create|add|edit|invite|copy|correct|correction|change|assign|link|configure|define|save|submit|upload|publish|activate|deactivate|suspend|expire|approve|reject|return|request|execute|acknowledge|withdraw|resend|run|test|reorder|remove|confirm|escalate|reply|private note|restrict|disable|enable|set scope|start dispute|defer|mark |notify|record follow-up|process dispute|assess|retry|rotate|security escalation|end other sessions|favorite|choose default|bulk action|bulk decision/i;
+const mutationActionPattern = /create|add|edit|invite|provision|deprovision|copy|correct|correction|change|assign|link|configure|define|save|submit|upload|publish|activate|deactivate|suspend|expire|approve|reject|return|request|execute|acknowledge|withdraw|resend|run|test|reorder|remove|confirm|escalate|reply|private note|restrict|disable|enable|set scope|start dispute|defer|mark |notify|record follow-up|process dispute|assess|retry|rotate|security escalation|end other sessions|favorite|choose default|bulk action|bulk decision/i;
 const sentenceCase = value => value ? value.charAt(0).toUpperCase() + value.slice(1) : value;
 const conciseDescriptions = {
   "AUTH-01":"Sign in to your authorized workspace.",
@@ -111,6 +111,16 @@ const conciseDescriptions = {
   "PROFILE-01":"Manage your profile and preferences.",
   "APR-01":"Review decisions assigned to you.",
   "ADMIN-01":"Monitor administrative setup and risk.",
+  "SAAS-01":"Operate tenants, plans, and platform access.",
+  "SAAS-02":"Manage tenant lifecycle and ownership.",
+  "SAAS-03":"Control plans, subscriptions, and renewals.",
+  "SAAS-04":"Track licensed usage and enforce limits.",
+  "SAAS-05":"Release platform features by plan or tenant.",
+  "SAAS-06":"Monitor provisioning and recovery jobs.",
+  "SAAS-07":"Govern regions and data residency.",
+  "SAAS-08":"Manage privileged SaaS administrators.",
+  "SAAS-09":"Audit cross-tenant platform changes.",
+  "SAAS-10":"Configure platform-wide defaults safely.",
   "IAM-01":"Define reusable access roles.",
   "IAM-02":"Compare permissions by role.",
   "IAM-03":"Review access requests and recertification.",
@@ -130,7 +140,7 @@ function workflowTitle(createTitle, editTitle) {
 
 const formFirstScreens = new Set(["PROV-03", "CLIENT-03", "WL-01", "PROFILE-01"]);
 const formCapableScreens = new Set([
-  ...formFirstScreens, "ORG-01", "ORG-02", "ORG-03", "ORG-04", "CLIENT-08", "APP-01", "TEAM-01", "RULE-01",
+  ...formFirstScreens, "SAAS-01", "SAAS-02", "SAAS-03", "SAAS-04", "SAAS-05", "SAAS-06", "SAAS-07", "SAAS-08", "SAAS-09", "SAAS-10", "ORG-01", "ORG-02", "ORG-03", "ORG-04", "CLIENT-08", "APP-01", "TEAM-01", "RULE-01",
   "CONT-01", "CONT-02", "CONT-03", "CONT-04", "SLA-01", "SLA-02", "SLA-03", "WL-03",
   "SET-01", "SET-02", "INT-01", "RET-01", "IAM-01", "IAM-02", "IAM-03", "IAM-04", "DEPT-01", "ISSUE-01"
 ]);
@@ -150,6 +160,12 @@ function formSpec(screen) {
     ]
   };
   }
+  if (id === "SAAS-01") return { title: action.includes("plan") ? "Manage tenant plan" : action.includes("feature") ? "Configure tenant features" : state.formMode === "edit" ? "Edit tenant account" : "Provision tenant account", sections: [
+    ["Tenant identity", [["Tenant ID","readonly",state.formMode === "edit" ? "TNT-0042" : "Assigned after approval","System generated"],["Organization name","text","Northstar Retail","Required"],["Workspace domain","text","northstar-support","Required · unique"],["Region","select","Middle East — Bahrain","Required · affects data residency"],["Tenant status","select",state.formMode === "edit" ? "Active" : "Provisioning","Controlled lifecycle"]]],
+    ["Commercial plan", [["Plan","select","Enterprise Support","Required"],["Billing cycle","select","Annual","Required"],["Licensed client users","number","50","Required"],["Licensed provider users","number","20","Required"],["Renewal date","date","2027-10-19","Required"]]],
+    ["Platform capabilities", [["Support-hour contracts","toggle","Enabled","Plan entitlement"],["Advanced SLA policies","toggle","Enabled","Plan entitlement"],["Audit export","toggle","Enabled","Security feature"],["API and integrations","toggle","Enabled","Credential setup follows provisioning"],["Data retention","select","7 years","Policy controlled"]]],
+    ["Owner and governance", [["Tenant administrator","email","admin@northstar.example","Required"],["Platform owner","select","SaaS Operations","Required"],["Provisioning reason","textarea","Approved customer onboarding request and signed subscription.","Required"],["Approval route","readonly","Commercial approval → Security review → Provisioning","Resolved automatically"]]]
+  ]};
   if (id === "PROV-02") return { title: action.includes("queue") ? "Save ticket queue" : "Update ticket assignment and priority", sections: [
     ["Selection", [["Selected tickets","readonly","4 authorized tickets","Selection remains within access scope"],["Current queue","readonly","All authorized tickets","Source view"],["Change type","select",action.includes("assign") ? "Assign or reassign" : action.includes("priority") ? "Priority and status" : "Saved queue definition","Required"]]],
     ["Update", [["Owner or team","select","Application Support","Required for assignment"],["Priority","select","P2 — High","Impact and urgency rules apply"],["Status","select","In Progress","Only valid transitions"],["Saved queue name","text","My high-priority payment tickets","Required when saving a queue"]]],
@@ -403,6 +419,13 @@ function navGroups(panel) {
     { name: "Approvals", rows: relabel(["SUP-07","SUP-08","SUP-09","SUP-10"],["Approval center","Worklog approvals","Contract exceptions","Channel intake"]) },
     { name: "Reports", rows: relabel(["SUP-11","SUP-12","SUP-13","SUP-14"],["Reports home","SLA report","Hours report","Service analytics"]) }
   ];
+  if (panel === "SAAS") return [
+    { name: "Overview", rows: relabel(["SAAS-01"],["Control center"]) },
+    { name: "Tenants", rows: relabel(["SAAS-02","SAAS-06"],["Tenant accounts","Provisioning jobs"]) },
+    { name: "Commercial", rows: relabel(["SAAS-03","SAAS-04"],["Plans and subscriptions","Usage and limits"]) },
+    { name: "Platform", rows: relabel(["SAAS-05","SAAS-07","SAAS-10"],["Feature management","Regions and residency","Platform settings"]) },
+    { name: "Governance", rows: relabel(["SAAS-08","SAAS-09"],["SaaS administrators","Platform audit"]) }
+  ];
   return [
     { name: "Home", rows: relabel(["ADM-01"],["Admin dashboard"]) },
     { name: "Customers", rows: relabel(["ADM-03","ADM-04","ADM-05"],["Organizations","Customer users","Applications"]) },
@@ -420,7 +443,7 @@ function sidebar() {
   return `<aside class="sidebar ${state.sidebarOpen ? "open" : ""}">
     <div class="brand"><div class="brand-mark">${icon("ticket", 27)}</div><div><h1>Support System</h1><small>Resolve faster. Support smarter.</small></div></div>
     <div class="panel-picker"><label>Prototype tools</label><small class="prototype-note">Demo only · hidden in production</small><div class="panel-buttons">
-      ${["CLIENT","SUPPORT","ADMIN"].map(p => `<button class="panel-button ${state.panel === p ? "active" : ""}" data-panel="${p}">${p[0] + p.slice(1).toLowerCase()}</button>`).join("")}
+      ${["CLIENT","SUPPORT","ADMIN","SAAS"].map(p => `<button class="panel-button ${state.panel === p ? "active" : ""}" data-panel="${p}">${p === "SAAS" ? "SaaS Admin" : p[0] + p.slice(1).toLowerCase()}</button>`).join("")}
     </div></div>
     <button class="directory-button ${state.directory?'active':''}" data-directory="1">${icon('report',18)}<span>Screen directory</span><b>${state.screens.length}</b></button>
     <nav>${groups.map(g => { const groupOpen = state.panelNavGroup[state.panel] === g.name; return `<button class="nav-section-toggle ${groupOpen?'open':''}" data-nav-group="${esc(g.name)}"><span>${esc(g.name)}</span><b>${g.rows.length}</b>${icon('arrow',15)}</button><div class="nav-section-items ${groupOpen?'open':''}">${g.rows.map(r => `<button class="nav-item ${!state.directory && state.screenId === r.target_screen_id ? "active" : ""}" data-screen="${esc(r.target_screen_id)}" data-panel-group="${esc(g.name)}">${icon(iconFor(r.label), 18)}<span>${esc(r.label)}</span></button>`).join("")}</div>`; }).join("")}</nav>
@@ -448,7 +471,7 @@ function authView(screen) {
       <label class="auth-field"><span>Work email</span><wired-input type="email" placeholder="name@company.com"></wired-input><small>Use the email linked to your organization.</small></label>
       <button class="btn-secondary auth-email" data-login-panel="CLIENT">${icon('arrow',17)} Continue</button>
       <div class="auth-message">${icon('shield',18)} <span>No client data appears before your identity and organization are verified.</span></div>
-      <div class="demo-access"><span>Prototype workspace preview</span><div><button data-login-panel="CLIENT">Client</button><button data-login-panel="SUPPORT">Support</button><button data-login-panel="ADMIN">Admin</button></div></div>
+      <div class="demo-access"><span>Prototype workspace preview</span><div><button data-login-panel="CLIENT">Client</button><button data-login-panel="SUPPORT">Support</button><button data-login-panel="ADMIN">Admin</button><button data-login-panel="SAAS">SaaS Admin</button></div></div>
       <div class="auth-links"><button class="text-action" data-toast="Language selector opened">English</button><button class="text-action" data-toast="Help request opened">Need help?</button><button class="text-action" data-screen="AUTH-02">View access state</button></div>
     </section>
   </main>`;
@@ -458,6 +481,7 @@ function sampleKPIs(screen) {
   const key = screen.screen_id;
   if (key === "CLIENT-01") return [["Open tickets","7","2 need your reply"],["SLA on track","94%","Across active tickets"],["Support hours","31.5 h","8.5 h used this month"],["New notifications","4","Last update 8 min ago"]];
   if (key === "PROV-01") return [["Open tickets","128","+12 this week"],["Unassigned","9","Needs triage"],["SLA at risk","14","Next breach in 42 min"],["Pending approvals","23","11 older than one day"]];
+  if (key === "SAAS-01") return [["Active tenants","42","3 onboarding"],["Subscription risk","5","Renewal or limit warning"],["Platform usage","71%","Across licensed capacity"],["Provisioning jobs","2","1 needs attention"]];
   if (key === "ADMIN-01") return [["Active clients","42","3 onboarding"],["Provider users","68","5 roles to review"],["Contracts expiring","6","Within 30 days"],["System alerts","3","1 high priority"]];
   if (key === "OPS-00") return [["Services healthy","12/14","2 degraded"],["Backup age","3 h","Within target"],["Failed jobs","4","Last 24 hours"],["Open incidents","2","1 high priority"]];
   return [];
@@ -472,6 +496,16 @@ function sampleRows(screen) {
     ["ST-10468","Add finance approver role","Organization access","New","Received today"]
   ];
   if (["ORG-03","ORG-04"].includes(screen.screen_id)) return [["USR-2048","Jordan Lee","Support agent","Scoped · 2 clients","Active"],["USR-2041","Nina Das","Support supervisor","Application Support","Active"],["INV-2841","Farah Khan","Client user","Northstar Retail","Invited"],["USR-1982","Omar Khalid","Worklog approver","2 teams","Review due"]];
+  if (screen.screen_id === "SAAS-01") return [["TNT-0042","Northstar Retail","Enterprise","Bahrain","Active"],["TNT-0038","Gulf Health Group","Professional","UAE","Renewal due"],["TNT-0049","Brightline Labs","Enterprise","Bahrain","Provisioning"],["TNT-0027","Atlas Logistics","Professional","Saudi Arabia","Usage warning"]];
+  if (screen.screen_id === "SAAS-02") return [["TNT-0042","Northstar Retail","northstar-support","SaaS Operations","Active"],["TNT-0038","Gulf Health Group","gulfhealth-support","Amina Yusuf","Renewal due"],["TNT-0049","Brightline Labs","brightline-support","SaaS Operations","Provisioning"],["TNT-0027","Atlas Logistics","atlas-support","Omar Khalid","Suspension review"]];
+  if (screen.screen_id === "SAAS-03") return [["SUB-1042","Northstar Retail","Enterprise","19 Oct 2027","Active"],["SUB-1038","Gulf Health Group","Professional","02 Nov 2026","Renewal due"],["SUB-1049","Brightline Labs","Enterprise","18 Oct 2027","Pending activation"],["SUB-1027","Atlas Logistics","Professional","12 Jan 2027","Payment review"]];
+  if (screen.screen_id === "SAAS-04") return [["TNT-0042","API calls","710k / 1m","71%","Normal"],["TNT-0038","Client users","46 / 50","92%","Warning"],["TNT-0049","Storage","18 / 500 GB","4%","Normal"],["TNT-0027","Provider users","20 / 20","100%","Limit reached"]];
+  if (screen.screen_id === "SAAS-05") return [["FEAT-AUD-EXP","Advanced audit export","Enterprise","12 tenants","Published"],["FEAT-SLA-SIM","SLA simulation","Professional + Enterprise","31 tenants","Published"],["FEAT-AI-TRIAGE","Assisted triage","Pilot allowlist","3 tenants","Pilot"],["FEAT-WA-INTAKE","WhatsApp intake","Enterprise","8 tenants","Review due"]];
+  if (screen.screen_id === "SAAS-06") return [["JOB-8842","Brightline Labs","Tenant provisioning","Configuration","Running"],["JOB-8839","Northstar Retail","Feature rollout","Validation","Failed"],["JOB-8834","Atlas Logistics","Capacity increase","Complete","Succeeded"],["JOB-8828","Gulf Health Group","Region backup","Complete","Succeeded"]];
+  if (screen.screen_id === "SAAS-07") return [["REG-BH-01","Bahrain","me-south-1","14 tenants","Healthy"],["REG-AE-01","UAE","me-central-1","18 tenants","Healthy"],["REG-SA-01","Saudi Arabia","me-central-2","10 tenants","Capacity watch"],["MIG-204","Northstar Retail","UAE → Bahrain","Security review","Planned"]];
+  if (screen.screen_id === "SAAS-08") return [["USR-SA-004","Mahmoud Nader","SaaS Administrator","All platform metadata","Active"],["USR-SA-009","Lina Ahmed","Platform Auditor","Read-only audit scope","Active"],["USR-SA-012","Omar Khalid","Provisioning Operator","Assigned regions","Access review"],["INV-SA-018","Nora Sami","Platform Auditor","Read only","Invited"]];
+  if (screen.screen_id === "SAAS-09") return [["EVT-98214","Tenant plan changed","TNT-0042","Mahmoud Nader","Today 10:42"],["EVT-98202","Feature enabled","TNT-0038","Lina Ahmed","Today 09:18"],["EVT-98188","Provisioning retried","TNT-0049","Omar Khalid","Yesterday"],["EVT-98172","Administrator scope changed","Platform","Security Admin","18 Oct"]];
+  if (screen.screen_id === "SAAS-10") return [["SET-SEC-01","Default MFA policy","Required","Security","Published"],["SET-RET-01","Default retention","7 years","Compliance","Published"],["SET-PROV-01","Provisioning template","v6","SaaS Operations","Review due"],["SET-MSG-01","Maintenance notice window","72 hours","Platform Ops","Draft"]];
   if (screen.screen_id === "CLIENT-08") return [["USR-CL-091","Maya Chen","Client administrator","All organization applications","Active"],["USR-CL-104","Jordan Lee","Client user","Commerce API","Active"],["INV-CL-119","Farah Khan","Client user","Commerce API; Customer Portal","Invitation expired"]];
   if (screen.screen_id === "IAM-01") return [["ROLE-014","Scoped Support Supervisor","Provider custom","18 users","Published"],["ROLE-009","Client Administrator","System","42 users","Published"],["ROLE-021","Audit Export Reviewer","Provider custom","3 users","Draft"]];
   if (screen.screen_id === "IAM-02") return [["ticket.view","View scoped tickets","Allow","Assigned scope","Inherited"],["ticket.assign","Assign tickets","Allow","Assigned teams","Direct"],["identity.invite","Invite users","Deny","All","Protected"],["audit.export","Export audit evidence","Deny","All","Protected"]];
@@ -500,13 +534,34 @@ function sampleRows(screen) {
 function tableFor(screen) {
   const ticketLike = ticketListScreens.has(screen.screen_id) || screen.module.toLowerCase() === "tickets";
   const contractLike = screen.module.toLowerCase().includes("contract") || screen.module.toLowerCase().includes("entitlement");
-  const accessHeaders = ({"ORG-03":["Reference","User","Role","Scope","Status"],"ORG-04":["Reference","User","Role","Scope","Status"],"CLIENT-08":["Reference","User","Role","Application scope","Status"],"IAM-01":["Reference","Role","Type","Assignments","Status"],"IAM-02":["Permission","Capability","Decision","Scope","Source"],"IAM-03":["Reference","User","Requested access","Risk","Status"],"IAM-04":["Reference","Invitee","Domain","Expiry","Status"],"DEPT-01":["Code","Department","Teams","Issue types","Status"],"ISSUE-01":["Code","Issue type","Department","Default service target","Status"]})[screen.screen_id];
+  const accessHeaders = ({"SAAS-01":["Tenant","Organization","Plan","Region","Status"],"SAAS-02":["Tenant","Organization","Workspace domain","Platform owner","Status"],"SAAS-03":["Subscription","Tenant","Plan","Renewal","Status"],"SAAS-04":["Tenant","Measured resource","Used / licensed","Utilization","Status"],"SAAS-05":["Feature","Name","Availability","Enabled tenants","Status"],"SAAS-06":["Job","Tenant","Operation","Stage","Status"],"SAAS-07":["Reference","Region / tenant","Cloud location / route","Tenants / stage","Status"],"SAAS-08":["Reference","User","Platform role","Scope","Status"],"SAAS-09":["Event","Change","Tenant scope","Actor","Time"],"SAAS-10":["Setting","Name","Value","Owner","Status"],"ORG-03":["Reference","User","Role","Scope","Status"],"ORG-04":["Reference","User","Role","Scope","Status"],"CLIENT-08":["Reference","User","Role","Application scope","Status"],"IAM-01":["Reference","Role","Type","Assignments","Status"],"IAM-02":["Permission","Capability","Decision","Scope","Source"],"IAM-03":["Reference","User","Requested access","Risk","Status"],"IAM-04":["Reference","Invitee","Domain","Expiry","Status"],"DEPT-01":["Code","Department","Teams","Issue types","Status"],"ISSUE-01":["Code","Issue type","Department","Default service target","Status"]})[screen.screen_id];
   const clientHeaders = ["CLIENT-01","CLIENT-02"].includes(screen.screen_id) ? ["Reference","Subject","Application / service","Status","Next step"] : null;
   const headers = accessHeaders || clientHeaders || (ticketLike ? ["Reference","Subject","Client","Status","SLA"] : contractLike ? ["Reference","Client","Plan","Status","Balance"] : ["Reference","Client","Status","Owner","Updated"]);
   const rowAction = ticketListScreens.has(screen.screen_id)
     ? `data-screen="${screen.screen_id.startsWith("CLIENT") ? "CLIENT-04" : "PROV-04"}"`
     : formCapableScreens.has(screen.screen_id) ? 'data-action="open-form" data-mode="edit"' : `data-toast="Opened record"`;
   return `<div class="table-wrap"><table><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${sampleRows(screen).map((r,i) => `<tr ${rowAction} aria-label="Open ${esc(r[0])}">${r.map((v,j) => `<td>${j===3 ? `<span class="status ${i===2?'dark':''}">${esc(v)}</span>` : esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
+function saasAdminContent() {
+  return `<section class="saas-admin-view">
+    <section class="grid kpis">
+      ${sampleKPIs({screen_id:"SAAS-01"}).map((k,i) => `<article class="kpi sketch-card"><div class="kpi-top"><span>${esc(k[0])}</span>${icon(["people","warning","report","settings"][i],22)}</div><strong>${esc(k[1])}</strong><small>${esc(k[2])}</small></article>`).join("")}
+    </section>
+    <section class="specialized-main">
+      <article class="panel sketch-card">
+        <div class="panel-header"><div><span class="eyebrow">Cross-tenant operations</span><h3>${icon('people',23)} Tenant registry</h3></div><button class="btn-primary" data-action="open-form" data-mode="create" data-form-action="Provision tenant">${icon('plus',17)} Provision tenant</button></div>
+        <div class="specialized-filter"><wired-search-input placeholder="Search tenant, domain, or plan"></wired-search-input><select class="sketch-select"><option>All tenant states</option><option>Needs attention</option><option>Provisioning</option></select><select class="sketch-select"><option>All plans</option><option>Professional</option><option>Enterprise</option></select></div>
+        ${tableFor({screen_id:"SAAS-01",module:"SaaS platform administration"})}
+        <p class="specialized-note">${icon('shield',16)} Tenant isolation is enforced before any account, plan, or feature change.</p>
+      </article>
+      <aside class="panel sketch-card insight-panel"><h3>${icon('warning',21)} Platform attention</h3><ul class="list"><li>${icon('warning',17)}<span>Gulf Health renewal is due in 14 days.</span></li><li>${icon('warning',17)}<span>Atlas Logistics reached 92% of licensed API usage.</span></li><li>${icon('check',17)}<span>Nightly backups completed for all active regions.</span></li></ul><button class="flow-link" data-action="open-form" data-mode="edit" data-form-action="Review platform alert">Open platform review</button></aside>
+    </section>
+    <section class="flow-section-grid">
+      <article class="panel sketch-card"><h3>${icon('contract',21)} Subscription control</h3><div class="flow-facts"><div><label>Plans</label><strong>Professional · Enterprise</strong></div><div><label>Renewals this quarter</label><strong>8 tenants</strong></div><div><label>Payment exceptions</label><strong>2 under review</strong></div><div><label>Capacity changes</label><strong>Approval required</strong></div></div><button class="flow-link" data-action="open-form" data-mode="edit" data-form-action="Manage tenant plan">Manage plans and limits</button></article>
+      <article class="panel sketch-card"><h3>${icon('settings',21)} Feature and environment control</h3><div class="flow-facts"><div><label>Feature flags</label><strong>Plan and tenant scoped</strong></div><div><label>Regions</label><strong>Bahrain · UAE · Saudi Arabia</strong></div><div><label>Maintenance</label><strong>Next window 25 Oct</strong></div><div><label>Provisioning</label><strong>Versioned and auditable</strong></div></div><button class="flow-link" data-action="open-form" data-mode="edit" data-form-action="Configure tenant features">Configure features</button></article>
+    </section>
+  </section>`;
 }
 
 function ticketDetailContent(screen) {
@@ -702,7 +757,7 @@ function permissionMatrixContent() {
     </section>
     <article class="panel sketch-card permission-matrix-panel">
       <div class="panel-header"><div><h3>${icon('settings',22)} Screen permissions</h3><p>One row per screen. Changes remain draft until reviewed and published.</p></div><span class="status">Draft v12</span></div>
-      <div class="permission-filters"><label class="permission-search-field"><span>${icon('search',16)} Search screens</span><input type="search" data-permission-search placeholder="Name, ID, or module"></label><select class="sketch-select" data-permission-panel aria-label="Panel filter"><option>All panels</option><option>Client</option><option>Support</option><option>Admin</option></select><select class="sketch-select" data-permission-module-filter aria-label="Module filter"><option>All modules (${modules.length})</option>${modules.map(m=>`<option>${esc(m)}</option>`).join('')}</select><select class="sketch-select" data-permission-decision aria-label="Decision filter"><option>All decisions</option><option>Allow</option><option>Conditional</option><option>Deny</option></select><label class="permission-change-filter"><input type="checkbox" data-permission-changed> Changed only</label><button class="btn-secondary" data-permission-apply>Apply filters</button></div>
+      <div class="permission-filters"><label class="permission-search-field"><span>${icon('search',16)} Search screens</span><input type="search" data-permission-search placeholder="Name, ID, or module"></label><select class="sketch-select" data-permission-panel aria-label="Panel filter"><option>All panels</option><option>Client</option><option>Support</option><option>Admin</option><option>SaaS</option></select><select class="sketch-select" data-permission-module-filter aria-label="Module filter"><option>All modules (${modules.length})</option>${modules.map(m=>`<option>${esc(m)}</option>`).join('')}</select><select class="sketch-select" data-permission-decision aria-label="Decision filter"><option>All decisions</option><option>Allow</option><option>Conditional</option><option>Deny</option></select><label class="permission-change-filter"><input type="checkbox" data-permission-changed> Changed only</label><button class="btn-secondary" data-permission-apply>Apply filters</button></div>
       <div class="permission-legend"><span><i class="decision allow">✓</i> Allow</span><span><i class="decision conditional">◐</i> Conditional</span><span><i class="decision deny">—</i> Deny</span><span>${icon('lock',16)} Explicit scope required</span></div>
       <div class="permission-scroll-note">${icon('arrow',16)} Open one module at a time. The screen name and table heading remain fixed while you review decisions.</div>
       <div class="table-wrap permission-table"><table><colgroup><col class="col-screen"><col class="col-panel"><col span="5" class="col-capability"><col class="col-scope"><col class="col-source"><col class="col-action"></colgroup><thead><tr><th>Screen</th><th>Used in</th><th title="View">View</th><th title="Create">Create</th><th title="Edit">Edit</th><th title="Approve">Approve</th><th title="Administer">Admin</th><th>Record scope</th><th>Source</th><th>Action</th></tr></thead><tbody>${modules.map(module => {const open=state.permissionOpenModules.includes(module);return `<tr class="permission-module-row" data-permission-group="${esc(module)}"><th colspan="10"><button data-permission-module="${esc(module)}" aria-expanded="${open}">${icon(iconFor(module),17)}<span>${esc(module)} <small>${state.screens.filter(s=>s.module===module).length} screens</small></span>${icon('arrow',15)}</button></th></tr>${state.screens.filter(s=>s.module===module).map((screen,index)=>{const cell=type=>{const allowed=capability(screen,type);const conditional=allowed&&type!=='view'&&(index+type.length)%3===0;const decision=allowed?(conditional?'Conditional':'Allow'):'Deny';return `<td class="capability-cell"><button class="permission-decision ${decision.toLowerCase()}" data-toast="${esc(type)} permission for ${esc(screen.screen_id)} selected" aria-label="${decision} ${type}" title="${decision}: ${type}"><span>${allowed?(conditional?'◐':'✓'):'—'}</span><small>${decision}</small></button></td>`};const source=index%3===0?'Direct':index%3===1?'Inherited':'Default';const panels=panelsFor(screen);return `<tr class="permission-screen-row" data-module="${esc(module)}" data-panels="${esc(panels)}" data-changed="${index%4===0?'true':'false'}" ${open?'':'hidden'}><td><strong>${esc(screen.screen_id)}</strong><span>${esc(screen.screen_name)}</span></td><td><span class="panel-tags">${panels.split(' · ').map(p=>`<i>${esc(p)}</i>`).join('')}</span></td>${cell('view')}${cell('create')}${cell('edit')}${cell('approve')}${cell('admin')}<td><span class="scope-value">${icon('lock',14)} ${esc(scopeFor(screen))}</span></td><td><span class="permission-source ${source.toLowerCase()}">${source}</span></td><td><button class="table-link permission-configure" data-action="open-form" data-mode="edit" data-form-action="Configure ${esc(screen.screen_id)} permissions">Configure</button></td></tr>`}).join('')}`}).join('')}</tbody></table></div>
@@ -965,11 +1020,13 @@ function screenDirectoryView() {
   return `<main class="content directory-view">
     <div class="breadcrumbs"><a data-home="1">Prototype</a><span>/</span><span>Screen directory</span></div>
     <div class="page-heading"><div><span class="eyebrow">Complete wireframe coverage</span><h2>Screen directory</h2><p>Open any screen or workflow.</p></div><span class="screen-code">${state.screens.length} BASE · ${workflows.length} ACTION</span></div>
-    <section class="grid kpis directory-kpis"><article class="kpi sketch-card"><div class="kpi-top"><span>Catalog screens</span>${icon('report',22)}</div><strong>${state.screens.length}</strong><small>Every English CSV record</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Action screens</span>${icon('settings',22)}</div><strong>${workflows.length}</strong><small>Generated create/edit workflows</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Navigation panels</span>${icon('dashboard',22)}</div><strong>3</strong><small>Client, Support, Admin</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Missing screens</span>${icon('check',22)}</div><strong>0</strong><small>Coverage audit result</small></article></section>
+    <section class="grid kpis directory-kpis"><article class="kpi sketch-card"><div class="kpi-top"><span>Catalog screens</span>${icon('report',22)}</div><strong>${state.screens.length}</strong><small>Every English CSV record</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Action screens</span>${icon('settings',22)}</div><strong>${workflows.length}</strong><small>Generated create/edit workflows</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Navigation panels</span>${icon('dashboard',22)}</div><strong>4</strong><small>Client, Support, Admin, SaaS Admin</small></article><article class="kpi sketch-card"><div class="kpi-top"><span>Missing screens</span>${icon('check',22)}</div><strong>0</strong><small>Coverage audit result</small></article></section>
     <div class="directory-toolbar sketch-card"><wired-search-input placeholder="Use browser find to locate a screen or action"></wired-search-input><span>${icon('search',18)} Search by screen name, ID, module, or action</span></div>
     ${modules.map(module => { const screens=state.screens.filter(s=>s.module===module); return `<section class="directory-module sketch-card"><div class="directory-module-head"><h3>${icon(iconFor(module),22)} ${esc(module)}</h3><span>${screens.length} base screens</span></div>${screens.map(screen=>{const acts=workflows.filter(w=>w.screen.screen_id===screen.screen_id);return `<div class="directory-screen"><button class="directory-base" data-screen="${screen.screen_id}"><span><b>${esc(screen.screen_id)}</b>${esc(screen.screen_name)}</span><small>Open base screen</small></button>${acts.length?`<div class="directory-actions">${acts.map(w=>`<button data-directory-action="1" data-directory-screen="${screen.screen_id}" data-mode="${w.mode}" data-form-action="${esc(w.action)}"><span>${esc(w.action)}</span><small>${workflowCode(screen.screen_id,w.action,w.mode)}</small></button>`).join("")}</div>`:`<div class="directory-no-actions">No create or edit workflow required for this screen.</div>`}</div>`}).join("")}</section>`}).join("")}
   </main>`;
 }
+
+function panelLabel(panel) { return panel === "SAAS" ? "SaaS Admin" : panel[0] + panel.slice(1).toLowerCase(); }
 
 function screenView(screen) {
   if (state.flowView) return gapFlowView(screen);
@@ -980,11 +1037,11 @@ function screenView(screen) {
   const specializedContent = !isForm ? specializedScreenContent(screen) : "";
   const activeTitle = isForm ? formSpec(screen).title : screen.screen_name;
   return `<main class="content">
-    <div class="breadcrumbs"><a data-home="1">${state.panel[0]+state.panel.slice(1).toLowerCase()}</a><span>/</span><span>${esc(screen.module)}</span><span>/</span><span>${esc(activeTitle)}</span></div>
+    <div class="breadcrumbs"><a data-home="1">${panelLabel(state.panel)}</a><span>/</span><span>${esc(screen.module)}</span><span>/</span><span>${esc(activeTitle)}</span></div>
     <div class="page-heading"><div><span class="eyebrow">${esc(screen.channel)} · ${esc(screen.primary_roles)}</span><h2>${esc(activeTitle)}</h2><p>${esc(conciseDescription(screen))}</p></div><span class="screen-code">${esc(screen.screen_id)} · ${esc(screen.wireframe_priority)}</span></div>
     ${isForm && !formFirstScreens.has(screen.screen_id) ? `<div class="toolbar"><button class="btn-secondary" data-action="cancel-form">${icon('arrow',17)} Back to list</button></div>` : !isForm && !["SET-00","OPS-00","IAM-01","IAM-02"].includes(screen.screen_id) ? `<div class="toolbar">${actionButtons(screen)}</div>` : ""}
     ${states.some(s => /risk|warning|breach|error|fail|expired|rejected/i.test(s)) ? `<div class="callout">${icon('warning',23)}<div><strong>Scenario preview</strong><br><span>Example state: ${esc(states.filter(s => /risk|warning|breach|error|fail|expired|rejected/i.test(s)).slice(0,3).join(" · "))}</span></div></div>` : ""}
-    ${isForm ? detailedForm(screen) : screen.screen_id === "SET-00" ? systemSettingsContent() : screen.screen_id === "OPS-00" ? operationsOverviewContent() : screen.screen_id === "IAM-01" ? roleCatalogContent() : screen.screen_id === "IAM-02" ? permissionMatrixContent() : specializedContent ? specializedContent : ["CLIENT-04","PROV-04"].includes(screen.screen_id) ? ticketDetailContent(screen) : screen.screen_id === "NOTIF-01" ? notificationCenterContent() : ["CLIENT-05","CLIENT-06","CLIENT-07"].includes(screen.screen_id) ? clientContractsContent(screen) : `${kpis.length ? `<section class="grid kpis">${kpis.map((k,i) => `<article class="kpi sketch-card"><div class="kpi-top"><span>${esc(k[0])}</span>${icon(["ticket","clock","contract","bell"][i],22)}</div><strong>${esc(k[1])}</strong><small>${esc(k[2])}</small></article>`).join("")}</section>` : ""}
+    ${isForm ? detailedForm(screen) : screen.screen_id === "SAAS-01" ? saasAdminContent() : screen.screen_id === "SET-00" ? systemSettingsContent() : screen.screen_id === "OPS-00" ? operationsOverviewContent() : screen.screen_id === "IAM-01" ? roleCatalogContent() : screen.screen_id === "IAM-02" ? permissionMatrixContent() : specializedContent ? specializedContent : ["CLIENT-04","PROV-04"].includes(screen.screen_id) ? ticketDetailContent(screen) : screen.screen_id === "NOTIF-01" ? notificationCenterContent() : ["CLIENT-05","CLIENT-06","CLIENT-07"].includes(screen.screen_id) ? clientContractsContent(screen) : `${kpis.length ? `<section class="grid kpis">${kpis.map((k,i) => `<article class="kpi sketch-card"><div class="kpi-top"><span>${esc(k[0])}</span>${icon(["ticket","clock","contract","bell"][i],22)}</div><strong>${esc(k[1])}</strong><small>${esc(k[2])}</small></article>`).join("")}</section>` : ""}
     <section class="grid">
       <article class="panel sketch-card">
         <div class="panel-header"><h3>${icon('ticket',23)} Current records</h3><span class="status">Prototype data</span></div>
@@ -1000,7 +1057,7 @@ function render() {
   bind();
 }
 
-function panelDefault(panel) { return ({CLIENT:"CLIENT-01",SUPPORT:"PROV-01",ADMIN:"ADMIN-01"})[panel]; }
+function panelDefault(panel) { return ({CLIENT:"CLIENT-01",SUPPORT:"PROV-01",ADMIN:"ADMIN-01",SAAS:"SAAS-01"})[panel]; }
 function clearFormState() { state.formMode = null; state.formAction = ""; state.formStep = 1; state.formDirty = false; }
 function leaveForm(next) {
   if (state.formDirty && !window.confirm("You have unsaved changes. Leave this form and discard them?")) return;
