@@ -24,7 +24,7 @@ function icon(name, size = 20) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.ticket}</svg>`;
 }
 function iconFor(label) {
-  const x = label.toLowerCase();
+  const x = String(label || "").toLowerCase();
   if (x.includes("dashboard") || x.includes("overview")) return "dashboard";
   if (x.includes("ticket") || x.includes("work")) return "ticket";
   if (x.includes("contract") || x.includes("hour")) return "contract";
@@ -119,7 +119,7 @@ const conciseDescriptions = {
   "ISSUE-01":"Manage issue types and categories."
 };
 function conciseDescription(screen) {
-  return conciseDescriptions[screen.screen_id] || `Manage ${screen.screen_name.toLowerCase()}.`;
+  return conciseDescriptions[screen.screen_id] || `Manage ${String(screen.screen_name || "this screen").toLowerCase()}.`;
 }
 const ticketListScreens = new Set(["CLIENT-01", "CLIENT-02", "PROV-01", "PROV-02", "SLA-04"]);
 function workflowTitle(createTitle, editTitle) {
