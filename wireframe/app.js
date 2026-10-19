@@ -371,8 +371,14 @@ function formSpec(screen) {
 
 async function loadData() {
   const [screenText, navText] = await Promise.all([
-    fetch("../support_ticketing_screen_catalog_en.csv", { cache: "no-store" }).then(r => r.text()),
-    fetch("../support_ticketing_navigation_matrix_en.csv", { cache: "no-store" }).then(r => r.text())
+    fetch("./support_ticketing_screen_catalog_en.csv", { cache: "no-store" }).then(r => {
+      if (!r.ok) throw new Error(`Screen catalog could not load (${r.status})`);
+      return r.text();
+    }),
+    fetch("./support_ticketing_navigation_matrix_en.csv", { cache: "no-store" }).then(r => {
+      if (!r.ok) throw new Error(`Navigation matrix could not load (${r.status})`);
+      return r.text();
+    })
   ]);
   state.screens = parseCSV(screenText);
   state.nav = parseCSV(navText);
